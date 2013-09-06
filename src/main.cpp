@@ -301,10 +301,7 @@ int main(int argc, char *argv[]) {
 		// get const values
 		const qav::scr_size	ref_sz = ref_video.get_size();
 		const int		ref_fps_k = ref_video.get_fps_k();
-		//
-		//ref_video.get_frame(ref_buf);
-		//return 0;
-		// 
+
 		V_VPDATA	v_data;
 		for(int i = param; i < argc; ++i) {
 			try {
