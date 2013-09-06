@@ -58,7 +58,11 @@ public:
 
 	virtual void run(void) {
 		while(!_exit) {
-			if (!_video.get_frame(_buf, &_frame)) _frame = -1;
+			if (!_video.get_frame(_buf, &_frame)) {
+				_frame = -1;
+				if (_video.has_delay() && !_video.get_remaining_frame(_buf, &_frame))
+					_frame = -1;
+			}
 			// signal cons we're done
 			_s_cons.pop();
 			// wait for cons to tell us to go

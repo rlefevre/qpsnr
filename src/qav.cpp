@@ -99,32 +99,50 @@ int qav::qvideo::get_fps_k(void) const {
 	return 0;
 }
 
+bool qav::qvideo::has_delay(void) const {
+	if (pCodecCtx->codec->capabilities & CODEC_CAP_DELAY)
+		return true;
+	return false;
+}
+
+bool qav::qvideo::decode_frame(std::vector<unsigned char>& out, int *_frnum, AVPacket& packet) {
+	int frameFinished = 0;
+	// Decode video frame
+	avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+	if(frameFinished) {
+		AVPicture picRGB;
+		// Assign appropriate parts of buffer to image planes in pFrameRGB
+		avpicture_fill((AVPicture*)&picRGB, (unsigned char*)&out[0], PIX_FMT_RGB24, out_width, out_height);
+		sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, picRGB.data, picRGB.linesize);
+		++frnum;
+		if (_frnum) *_frnum = frnum;
+		if ((settings::SKIP_FRAMES < frnum) && (-1 == settings::MAX_FRAMES || frnum <= settings::MAX_FRAMES))
+			save_frame(&out[0]);
+		return true;
+	}
+	return false;
+}
+
 bool qav::qvideo::get_frame(std::vector<unsigned char>& out, int *_frnum) {
 	out.resize(avpicture_get_size(PIX_FMT_RGB24, out_width, out_height));
 	AVPacket	packet = { 0 };
 	bool		is_read = false;
 	av_init_packet(&packet);
 	while (av_read_frame(pFormatCtx, &packet)>=0) {
-		if (packet.stream_index==videoStream) {
-			int frameFinished = 0;
-			// Decode video frame
-			avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
-			if(frameFinished) {
-				AVPicture picRGB;
-				// Assign appropriate parts of buffer to image planes in pFrameRGB
-				avpicture_fill((AVPicture*)&picRGB, (unsigned char*)&out[0], PIX_FMT_RGB24, out_width, out_height);
-				sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, picRGB.data, picRGB.linesize);
-				++frnum;
-				if (_frnum) *_frnum = frnum;
-				if ((settings::SKIP_FRAMES < frnum) && (-1 == settings::MAX_FRAMES || frnum <= settings::MAX_FRAMES))
-					save_frame(&out[0]);
-				is_read=true;
-			}
-		}
+		if (packet.stream_index==videoStream)
+			is_read = decode_frame(out, _frnum, packet);
 		av_free_packet(&packet);
 		if (is_read) return true;
 	}
 	return false;
+}
+
+bool qav::qvideo::get_remaining_frame(std::vector<unsigned char>& out, int *_frnum) {
+	AVPacket	packet = { 0 };
+	av_init_packet(&packet);
+	packet.data = NULL;
+	packet.size = 0;
+	return decode_frame(out, _frnum, packet);
 }
 
 /*bool SaveTGA(char *name, const unsigned char *data, int sizeX, int sizeY) {

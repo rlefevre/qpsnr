@@ -61,11 +61,14 @@ namespace qav {
 		AVFrame			*pFrame;
 		struct SwsContext	*img_convert_ctx;
 		std::string		fname;
+		bool decode_frame(std::vector<unsigned char>& out, int *_frnum, AVPacket& packet);
 	public:
 		qvideo(const char* file, int _out_width = -1, int _out_height = -1);
 		scr_size get_size(void) const;
 		int get_fps_k(void) const;
+		bool has_delay(void) const;
 		bool get_frame(std::vector<unsigned char>& out, int *_frnum = 0);
+		bool get_remaining_frame(std::vector<unsigned char>& out, int *_frnum = 0);
 		void save_frame(const unsigned char *buf, const char* __fname = 0);
 		void save_jpeg_frame(const unsigned char *buf, const char* __fname = 0);
 		void save_ppm_frame(const unsigned char *buf, const char* __fname = 0);
