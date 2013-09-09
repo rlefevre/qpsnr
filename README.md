@@ -5,15 +5,15 @@ This is a fork of the qpsnr tool [qpsnr] (http://qpsnr.youlink.org/).
 
 # What's New
 
- * Fixed compilation to work with the avcodec and avformat libraries that come with Ubuntu 12.04.
+ * Fixed compilation to work with the avcodec and avformat libraries that come with Ubuntu 13.04.
  * Removed the -g flag from the make file (faster processing).
- * Added a new -J flag that saves frames in JPEG format (requires libjpeg62-dev).
+ * Added a new -J flag that saves frames in JPEG format (requires libjpeg-dev).
 
 # Compilation
 
 Install the required packages:
 
-	sudo apt-get install g++ libavcodec-dev libavformat-dev libswscale-dev libjpeg62-dev
+	sudo apt-get install g++ libavcodec-dev libavformat-dev libswscale-dev libavutil-dev libjpeg-dev
 
 then compile the source:
 
